@@ -221,7 +221,7 @@ def config_logger(args):
     logger.addHandler(handle)
 
 if __name__ == '__main__':
-    args = docopt(__doc__, version='direg v1.0.0')
+    args = docopt(__doc__, version='direg v1.0.1')
     config_logger(args)
     config = {}
     try:
