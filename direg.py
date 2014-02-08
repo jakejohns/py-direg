@@ -54,6 +54,7 @@ def remove_old(directory):
 def send_email(directory):
     raise Exception('Not Implemented')
 
+# Config lookups
 
 default_tests = {
         'max_size' : max_size,
@@ -65,6 +66,7 @@ default_solutions = {
         'send_email' : send_email
         }
 
+# Model 
 
 class UnregulatableError(Exception):
     pass
@@ -173,6 +175,7 @@ class DiregDirectory(object):
         else:
             logger.info('No action required: %s', self.path)
 
+# Application
 
 def regulate(directories) :
     logger.debug('Regulating %s directories', len(directories))
@@ -219,6 +222,8 @@ def config_logger(args):
     handle.setLevel(lvl)
     handle.setFormatter(formatter)
     logger.addHandler(handle)
+
+# Interface
 
 if __name__ == '__main__':
     args = docopt(__doc__, version='direg v1.0.1')
