@@ -19,6 +19,15 @@ import sys
 import glob
 import humanfriendly
 
+__author__ = "Jake Johns"
+__copyright__ = "Copyright 2014, Jake Johns"
+
+__license__ = "GPL"
+__version__ = "1.0.1"
+__maintainer__ = "Jake Johns"
+__email__ = "jake@jakejohns.net"
+__status__ = "Production"
+
 
 logger = logging.getLogger('direg')
 
@@ -226,7 +235,7 @@ def config_logger(args):
 # Interface
 
 if __name__ == '__main__':
-    args = docopt(__doc__, version='direg v1.0.1')
+    args = docopt(__doc__, version=__version__)
     config_logger(args)
     config = {}
     try:
