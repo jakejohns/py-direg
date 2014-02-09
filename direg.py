@@ -34,6 +34,9 @@ logger = logging.getLogger('direg')
 # Default Tests
 
 def max_size(directory):
+    """Test directory for maximum size
+    returns true if directory size is larger than spec property "max_size"
+    """
     try:
         max_size = humanfriendly.parse_size(directory.spec['max_size'])
     except KeyError:
@@ -42,6 +45,10 @@ def max_size(directory):
     return  directory.size > max_size 
 
 def max_count(directory):
+    """Test directory for maximum file count
+    returns true if directory contains more files than specified by spec
+    property "max_count"
+    """
     try:
         max_count = int(directory.spec['max_count'])
     except KeyError:
@@ -54,6 +61,9 @@ def max_count(directory):
 # Default Solutions
 
 def remove_old(directory):
+    """Solve directory by removing oldest files 
+    removes files until directory test returns false
+    """
     contents = directory.contents
     while contents:
         if not directory.test():
@@ -61,6 +71,8 @@ def remove_old(directory):
         os.remove(contents.pop())
 
 def send_email(directory):
+    """ sends an email if directory test returns true
+    """
     raise Exception('Not Implemented')
 
 # Config lookups
@@ -103,6 +115,9 @@ class DiregDirectory(object):
 
     @tester.setter
     def tester(self, value):
+        """Sets test strategy
+        loads predefined strategy from string or checks that value is calable
+        """
         if isinstance(value, str):
             try:
                 value = default_tests[value]
@@ -124,6 +139,9 @@ class DiregDirectory(object):
 
     @solution.setter
     def solution(self, value):
+        """Sets solution strategy
+        loads predefined strategy from string or checks that value is calable
+        """
         if isinstance(value, str):
             try:
                 value = default_solutions[value]
@@ -156,6 +174,8 @@ class DiregDirectory(object):
         return self.get_contents()
 
     def get_contents(self, reverseOrder = True):
+        """gets contents of directory, reverses sort order based on mtime
+        """
         logger.debug('Getting Contents: %s', self.path)
         return sorted((os.path.join(dirname, filename) for dirname, dirnames,
             filenames in os.walk(self.path) for filename in filenames),
@@ -187,6 +207,8 @@ class DiregDirectory(object):
 # Application
 
 def regulate(directories) :
+    """Regulates directories based on task list
+    """
     logger.debug('Regulating %s directories', len(directories))
     for directory in directories :
         try:
@@ -196,6 +218,8 @@ def regulate(directories) :
 
 
 def load(directories):
+    """Loads directory tasks based on specifications
+    """
     tasks = []
     for spec in directories:
         try:
@@ -221,6 +245,8 @@ def load(directories):
 
 
 def config_logger(args):
+    """ configures logging
+    """
     lvl = logging.ERROR - (10 * args['-v'])
     logger.setLevel(lvl)
     if args['--log']:
