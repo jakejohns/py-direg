@@ -82,6 +82,12 @@ The `max_count` test can be used by passing `max_count` as the test value and
 including a `max_count` key that specifies the maximum number of files allowed
 in the directory. 
 
+##### always
+The `always` test always returns true, so it always triggers the solution.
+
+##### never
+The `never` test always returns false, so it never triggers the solution.
+
 #### Predefined Solutions
 
 ##### remove_old

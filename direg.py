@@ -57,6 +57,16 @@ def max_count(directory):
         raise UnregulatableError('"max_count" must be an integer!')
     return len(directory.contents) > max_count
 
+def always(directory):
+    """ Always returns true
+    """
+    return True
+
+def never(directory):
+    """ Always returns false
+    """
+    return False
+
 
 # Default Solutions
 
@@ -79,7 +89,9 @@ def send_email(directory):
 
 default_tests = {
         'max_size' : max_size,
-        'max_count' : max_count
+        'max_count' : max_count,
+        'always' : always,
+        'never' : never
         }
 
 default_solutions = {
