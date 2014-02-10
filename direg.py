@@ -257,8 +257,10 @@ def load(directories):
     for spec in directories:
         try:
             logger.debug('Processing specification for: %s', spec['path'])
-            for path in glob.glob(os.path.expanduser(spec['path'])) :
-                print path
+            paths =  glob.glob(os.path.expanduser(spec['path']))
+            if not paths:
+                raise UnregulatableError('no paths found in glob')
+            for path in paths:
                 if not os.path.isdir(path):
                     logger.error('%s is not a directory',  path)
                     continue
