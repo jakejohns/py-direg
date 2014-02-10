@@ -69,7 +69,7 @@ def is_after(directory):
     if callable(expiry):
         expiry = expiry()
     expiry = humanfriendly.parse_date(expiry)
-    return now >= expiry
+    return now > expiry
 
 def always(directory):
     """ Always returns true
@@ -99,6 +99,12 @@ def send_email(directory):
     """
     raise Exception('Not Implemented')
 
+def do_nothing(directory):
+    """ Does nothing
+    """
+    pass
+
+
 # Config lookups
 
 default_tests = {
@@ -110,7 +116,8 @@ default_tests = {
 
 default_solutions = {
         'remove_old' : remove_old,
-        'send_email' : send_email
+        'send_email' : send_email,
+        'do_nothing' : do_nothing
         }
 
 # Model 
@@ -251,6 +258,7 @@ def load(directories):
         try:
             logger.debug('Processing specification for: %s', spec['path'])
             for path in glob.glob(os.path.expanduser(spec['path'])) :
+                print path
                 if not os.path.isdir(path):
                     logger.error('%s is not a directory',  path)
                     continue
