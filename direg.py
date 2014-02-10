@@ -13,12 +13,10 @@ Options:
 """
 
 from docopt import docopt
-import logging
-import os
-import sys
-import glob
+import os, sys, time, glob, logging
 import humanfriendly
 from datetime import datetime
+from datetime import timedelta
 import collections
 import calendar
 
@@ -48,7 +46,7 @@ def max_size(directory):
     size = directory.size
     logger.debug("Directory size is %s", humanfriendly.format_size(size))
     logger.debug("max_size set to: %s", humanfriendly.format_size(max_size))
-    return  size > max_size 
+    return  size > max_size
 
 def max_count(directory):
     """Test directory for maximum file count
@@ -69,7 +67,7 @@ def max_count(directory):
 def is_after(directory):
     """ Test based on date input
     returns true if now is greater than expiry
-    expiry can be callable or a string. 
+    expiry can be callable or a string.
     The resulting string is parsed by humanfriendly.parse_date
     """
     try:
@@ -114,7 +112,7 @@ def never(directory):
 # Default Solutions
 
 def remove_old(directory):
-    """Solve directory by removing oldest files 
+    """Solve directory by removing oldest files
     removes files until directory test returns false
     """
     contents = directory.contents
@@ -122,6 +120,37 @@ def remove_old(directory):
         if not directory.test():
             break
         os.remove(contents.pop())
+
+def remove_older_than(directory):
+    """Removes files older than number of seconds given in spec expiry
+    """
+    try:
+        delta = directory.spec['cutoff']
+    except KeyError:
+        raise UnregulatableError('Must specify cutoff')
+    if isinstance(delta, timedelta):
+        delta = delta.total_seconds()
+
+    try:
+        delta = int(delta)
+    except ValueError:
+        raise UnregulatableError('cutoff must be int or timedelta!')
+
+    now = time.time()
+    cutoff = now - delta
+
+    logger.debug(
+            'Remove files that are %s old. Date: %s',
+             humanfriendly.format_timespan(delta),
+             datetime.fromtimestamp(cutoff)
+            )
+
+    contents = directory.contents
+    for f in contents:
+        if os.stat(f).st_mtime < cutoff:
+            os.remove(f)
+
+
 
 def send_email(directory):
     """ sends an email if directory test returns true
@@ -148,10 +177,11 @@ default_tests = {
 default_solutions = {
         'remove_old' : remove_old,
         'send_email' : send_email,
+        'remove_older_than' : remove_older_than,
         'do_nothing' : do_nothing
         }
 
-# Model 
+# Model
 
 class UnregulatableError(Exception):
     pass
@@ -170,7 +200,7 @@ class DiregDirectory(object):
             self.tester = spec.get('test', default_tests['max_size'])
             self.solution = spec.get('solution', default_solutions['remove_old'])
         except (KeyError, TypeError):
-            raise UnregulatableError 
+            raise UnregulatableError
 
     @property
     def tester(self):
@@ -198,7 +228,7 @@ class DiregDirectory(object):
 
     @property
     def solution(self):
-        """Solution strategy""" 
+        """Solution strategy"""
         return self._solution
 
     @solution.setter
