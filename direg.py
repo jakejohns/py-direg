@@ -13,11 +13,12 @@ Options:
 """
 
 from docopt import docopt
-import logging
-import os
-import sys
-import glob
+import os, sys, time, glob, logging
 import humanfriendly
+from datetime import datetime
+from datetime import timedelta
+import collections
+import calendar
 
 __author__ = "Jake Johns"
 __copyright__ = "Copyright 2014, Jake Johns"
@@ -42,7 +43,10 @@ def max_size(directory):
     except KeyError:
         raise UnregulatableError('No "max_size" configured in specification!')
 
-    return  directory.size > max_size 
+    size = directory.size
+    logger.debug("Directory size is %s", humanfriendly.format_size(size))
+    logger.debug("max_size set to: %s", humanfriendly.format_size(max_size))
+    return  size > max_size
 
 def max_count(directory):
     """Test directory for maximum file count
@@ -55,13 +59,60 @@ def max_count(directory):
         raise UnregulatableError('No "max_count" configured in specification!')
     except ValueError:
         raise UnregulatableError('"max_count" must be an integer!')
-    return len(directory.contents) > max_count
+    count = len(directory.contents)
+    logger.debug("File count is %s", count)
+    logger.debug("max_count set to: %s", max_count)
+    return count > max_count
+
+def is_after(directory):
+    """ Test based on date input
+    returns true if now is greater than expiry
+    expiry can be callable or a string.
+    The resulting string is parsed by humanfriendly.parse_date
+    """
+    try:
+        expiry = directory.spec['expiry']
+        if callable(expiry):
+            expiry = expiry()
+        expiry = datetime(*humanfriendly.parse_date(expiry))
+    except KeyError:
+        raise UnregulatableError('must specify "expiry" in spec')
+    except humanfriendly.InvalidDate:
+        raise UnregulatableError('expiry must be in format: YYYY-MM-DD [HH:MM:SS]')
+    now = datetime.now()
+    logger.debug('It is currently %s', str(now))
+    logger.debug('Expiry is %s', str(expiry))
+    return now > expiry
+
+def is_day_of_week(directory):
+    """ Test returns true if today specified in directory dow
+    """
+    try:
+        days = directory.spec['dow']
+    except KeyError:
+        raise UnregulatableError('Must specify "dow" in spec')
+    if not isinstance(days, collections.Sequence):
+        days = (days)
+    today = datetime.today().weekday()
+    logger.debug('Today is %s', calendar.day_abbr[today])
+    logger.debug('DOW is: %s', ', '.join(calendar.day_abbr[int(d)] for d in days))
+    return str(today) in ''.join(str(d) for d in days)
+
+def always(directory):
+    """ Always returns true
+    """
+    return True
+
+def never(directory):
+    """ Always returns false
+    """
+    return False
 
 
 # Default Solutions
 
 def remove_old(directory):
-    """Solve directory by removing oldest files 
+    """Solve directory by removing oldest files
     removes files until directory test returns false
     """
     contents = directory.contents
@@ -70,24 +121,67 @@ def remove_old(directory):
             break
         os.remove(contents.pop())
 
+def remove_older_than(directory):
+    """Removes files older than number of seconds given in spec expiry
+    """
+    try:
+        delta = directory.spec['cutoff']
+    except KeyError:
+        raise UnregulatableError('Must specify cutoff')
+    if isinstance(delta, timedelta):
+        delta = delta.total_seconds()
+
+    try:
+        delta = int(delta)
+    except ValueError:
+        raise UnregulatableError('cutoff must be int or timedelta!')
+
+    now = time.time()
+    cutoff = now - delta
+
+    logger.debug(
+            'Remove files that are %s old. Date: %s',
+             humanfriendly.format_timespan(delta),
+             datetime.fromtimestamp(cutoff)
+            )
+
+    contents = directory.contents
+    for f in contents:
+        if os.stat(f).st_mtime < cutoff:
+            os.remove(f)
+
+
+
 def send_email(directory):
     """ sends an email if directory test returns true
     """
     raise Exception('Not Implemented')
 
+def do_nothing(directory):
+    """ Does nothing
+    """
+    pass
+
+
 # Config lookups
 
 default_tests = {
         'max_size' : max_size,
-        'max_count' : max_count
+        'max_count' : max_count,
+        'is_after': is_after,
+        'is_day_of_week': is_day_of_week,
+        'always' : always,
+        'never' : never
         }
 
 default_solutions = {
         'remove_old' : remove_old,
-        'send_email' : send_email
+        'send_email' : send_email,
+        'remove_older_than' : remove_older_than,
+        'do_nothing' : do_nothing
         }
 
-# Model 
+# Model
 
 class UnregulatableError(Exception):
     pass
@@ -106,7 +200,7 @@ class DiregDirectory(object):
             self.tester = spec.get('test', default_tests['max_size'])
             self.solution = spec.get('solution', default_solutions['remove_old'])
         except (KeyError, TypeError):
-            raise UnregulatableError 
+            raise UnregulatableError
 
     @property
     def tester(self):
@@ -134,7 +228,7 @@ class DiregDirectory(object):
 
     @property
     def solution(self):
-        """Solution strategy""" 
+        """Solution strategy"""
         return self._solution
 
     @solution.setter
@@ -224,7 +318,10 @@ def load(directories):
     for spec in directories:
         try:
             logger.debug('Processing specification for: %s', spec['path'])
-            for path in glob.glob(os.path.expanduser(spec['path'])) :
+            paths =  glob.glob(os.path.expanduser(spec['path']))
+            if not paths:
+                raise UnregulatableError('no paths found in glob')
+            for path in paths:
                 if not os.path.isdir(path):
                     logger.error('%s is not a directory',  path)
                     continue
