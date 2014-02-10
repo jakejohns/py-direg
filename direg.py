@@ -20,6 +20,7 @@ import glob
 import humanfriendly
 from datetime import datetime
 import collections
+import calendar
 
 __author__ = "Jake Johns"
 __copyright__ = "Copyright 2014, Jake Johns"
@@ -44,7 +45,10 @@ def max_size(directory):
     except KeyError:
         raise UnregulatableError('No "max_size" configured in specification!')
 
-    return  directory.size > max_size 
+    size = directory.size
+    logger.debug("Directory size is %s", humanfriendly.format_size(size))
+    logger.debug("max_size set to: %s", humanfriendly.format_size(max_size))
+    return  size > max_size 
 
 def max_count(directory):
     """Test directory for maximum file count
@@ -57,7 +61,10 @@ def max_count(directory):
         raise UnregulatableError('No "max_count" configured in specification!')
     except ValueError:
         raise UnregulatableError('"max_count" must be an integer!')
-    return len(directory.contents) > max_count
+    count = len(directory.contents)
+    logger.debug("File count is %s", count)
+    logger.debug("max_count set to: %s", max_count)
+    return count > max_count
 
 def is_after(directory):
     """ Test based on date input
@@ -74,7 +81,10 @@ def is_after(directory):
         raise UnregulatableError('must specify "expiry" in spec')
     except humanfriendly.InvalidDate:
         raise UnregulatableError('expiry must be in format: YYYY-MM-DD [HH:MM:SS]')
-    return datetime.now() > expiry
+    now = datetime.now()
+    logger.debug('It is currently %s', str(now))
+    logger.debug('Expiry is %s', str(expiry))
+    return now > expiry
 
 def is_day_of_week(directory):
     """ Test returns true if today specified in directory dow
@@ -86,6 +96,8 @@ def is_day_of_week(directory):
     if not isinstance(days, collections.Sequence):
         days = (days)
     today = datetime.today().weekday()
+    logger.debug('Today is %s', calendar.day_abbr[today])
+    logger.debug('DOW is: %s', ', '.join(calendar.day_abbr[int(d)] for d in days))
     return str(today) in ''.join(str(d) for d in days)
 
 def always(directory):
