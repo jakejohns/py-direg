@@ -19,6 +19,7 @@ import sys
 import glob
 import humanfriendly
 from datetime import datetime
+import collections
 
 __author__ = "Jake Johns"
 __copyright__ = "Copyright 2014, Jake Johns"
@@ -71,6 +72,15 @@ def is_after(directory):
     expiry = datetime(*humanfriendly.parse_date(expiry))
     return now > expiry
 
+def is_day_of_week(directory):
+    """ Test returns true if today specified in directory dow
+    """
+    today = datetime.today().weekday()
+    days = directory.spec['dow']
+    if not isinstance(days, collections.Sequence):
+        days = (days)
+    return str(today) in ''.join(str(d) for d in days)
+
 def always(directory):
     """ Always returns true
     """
@@ -111,6 +121,7 @@ default_tests = {
         'max_size' : max_size,
         'max_count' : max_count,
         'is_after': is_after,
+        'is_day_of_week': is_day_of_week,
         'always' : always,
         'never' : never
         }
