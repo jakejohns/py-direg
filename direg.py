@@ -65,20 +65,27 @@ def is_after(directory):
     expiry can be callable or a string. 
     The resulting string is parsed by humanfriendly.parse_date
     """
-    now = datetime.now()
-    expiry = directory.spec['expiry']
-    if callable(expiry):
-        expiry = expiry()
-    expiry = datetime(*humanfriendly.parse_date(expiry))
-    return now > expiry
+    try:
+        expiry = directory.spec['expiry']
+        if callable(expiry):
+            expiry = expiry()
+        expiry = datetime(*humanfriendly.parse_date(expiry))
+    except KeyError:
+        raise UnregulatableError('must specify "expiry" in spec')
+    except humanfriendly.InvalidDate:
+        raise UnregulatableError('expiry must be in format: YYYY-MM-DD [HH:MM:SS]')
+    return datetime.now() > expiry
 
 def is_day_of_week(directory):
     """ Test returns true if today specified in directory dow
     """
-    today = datetime.today().weekday()
-    days = directory.spec['dow']
+    try:
+        days = directory.spec['dow']
+    except KeyError:
+        raise UnregulatableError('Must specify "dow" in spec')
     if not isinstance(days, collections.Sequence):
         days = (days)
+    today = datetime.today().weekday()
     return str(today) in ''.join(str(d) for d in days)
 
 def always(directory):
