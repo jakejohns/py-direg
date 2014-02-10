@@ -82,6 +82,19 @@ The `max_count` test can be used by passing `max_count` as the test value and
 including a `max_count` key that specifies the maximum number of files allowed
 in the directory. 
 
+##### is_after
+
+The `is_after` test checks if today is after the date provided by the directory
+spec key `expiry`. Date should be formatted as 'YYYY-MM-DD HH:MM:SS'. Can also
+be a callable. 
+
+##### is_day_of_week
+
+The `is_day_of_week` test checks if the current day of week is specified in the
+directory spec `dow` entry. Days are specified as integers 0-6 where 0 is
+Monday, and 6 is Sunday. This can be a single integer, a list, or tuple, or a
+string of numbers to specify multiple days. 
+
 ##### always
 The `always` test always returns true, so it always triggers the solution.
 
@@ -97,6 +110,12 @@ is specified. It can also be explicitly declared by passing `remove_old` as the
 `solution` value. It simply removes the oldest file in the directory until the
 directory test no longer returns true. Be sure that it is used in conjunction
 with an appropriate test. 
+
+##### remove_older_than
+
+The `remove_older_than` solution removes files older than the specified time
+delta in the direcry spec `cutoff` key. The `cuttoff` may be a number of seconds
+old, or a `datetime.timedelta`.
 
 ##### send_email
 
