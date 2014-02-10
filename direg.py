@@ -18,6 +18,7 @@ import os
 import sys
 import glob
 import humanfriendly
+from datetime import datetime
 
 __author__ = "Jake Johns"
 __copyright__ = "Copyright 2014, Jake Johns"
@@ -56,6 +57,19 @@ def max_count(directory):
     except ValueError:
         raise UnregulatableError('"max_count" must be an integer!')
     return len(directory.contents) > max_count
+
+def is_after(directory):
+    """ Test based on date input
+    returns true if now is greater than expiry
+    expiry can be callable or a string. 
+    The resulting string is parsed by humanfriendly.parse_date
+    """
+    now = datetime.now()
+    expiry = directory.spec['expiry']
+    if callable(expiry):
+        expiry = expiry()
+    expiry = humanfriendly.parse_date(expiry)
+    return now >= expiry
 
 def always(directory):
     """ Always returns true
