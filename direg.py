@@ -68,7 +68,7 @@ def is_after(directory):
     expiry = directory.spec['expiry']
     if callable(expiry):
         expiry = expiry()
-    expiry = humanfriendly.parse_date(expiry)
+    expiry = datetime(*humanfriendly.parse_date(expiry))
     return now > expiry
 
 def always(directory):
@@ -110,6 +110,7 @@ def do_nothing(directory):
 default_tests = {
         'max_size' : max_size,
         'max_count' : max_count,
+        'is_after': is_after,
         'always' : always,
         'never' : never
         }
