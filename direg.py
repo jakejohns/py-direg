@@ -24,7 +24,7 @@ __author__ = "Jake Johns"
 __copyright__ = "Copyright 2014, Jake Johns"
 
 __license__ = "GPL"
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 __maintainer__ = "Jake Johns"
 __email__ = "jake@jakejohns.net"
 __status__ = "Production"
